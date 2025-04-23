@@ -28,9 +28,11 @@ class AccessLogResource extends Resource
         return $form
             ->schema([
                 Select::make('tags_id')
-                    ->relationship('rfid_tags', 'tag_uid')
+                    ->relationship('rfidTag', 'tag_uid')
+                    ->placeholder('Cari berdasarkan UID RFID...')
                     ->searchable()
-                    ->required(),
+                    ->required()
+                    ->preload(),
                 DateTimePicker::make('accessed_at')
                     ->required(),
                 Select::make('status')
@@ -48,11 +50,14 @@ class AccessLogResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('rfid_tags.tag_uid')->label('Tag UID'),
-                TextColumn::make('accessed_at')->dateTime(),
-                TextColumn::make('status'),
-                TextColumn::make('note')->limit(20),
+                TextColumn::make('rfidTag.tag_uid')->label('Tag UID')->sortable()->searchable(),
+                TextColumn::make('rfidTag.user.name')->label('User')->sortable()->searchable(),
+                TextColumn::make('rfidTag.vehicle.plate_number')->label('Plate Number')->sortable()->searchable(),
+                TextColumn::make('accessed_at')->dateTime()->label('Data/Time')->sortable()->searchable(),
+                TextColumn::make('status')->sortable()->searchable(),
+                TextColumn::make('note')->limit(20)->sortable()->searchable(),
             ])
+            ->poll('3s')
             ->defaultSort('accessed_at', 'desc')
             ->filters([
                 //
