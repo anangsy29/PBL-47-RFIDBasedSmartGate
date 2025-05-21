@@ -13,6 +13,7 @@ class WelcomeWidget extends Widget
         return [
             'day' => now()->format('l'),
             'time' => now()->format('g:i A'),
+            'date'  => now()->format('F d Y'),
         ];
     }
 
