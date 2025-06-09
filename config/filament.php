@@ -9,5 +9,10 @@ return [
         // Atur pengaturan halaman di sini jika diperlukan
     ],
 
+    'panels' => [
+        App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\Filament\UserPanelProvider::class,
+    ],
+
     // Pengaturan lainnya bisa ditambahkan di sini sesuai kebutuhan
 ];

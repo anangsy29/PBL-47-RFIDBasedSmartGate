@@ -16,6 +16,11 @@ class Officer extends Authenticatable
         'password',
     ];
 
+    public function getAuthIdentifierName()
+    {
+        return 'id';
+    }
+
     protected $hidden = [
         'password',
         'remember_token',
