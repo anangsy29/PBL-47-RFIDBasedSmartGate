@@ -2,7 +2,7 @@
 
 namespace App\Filament\User\Resources\AccessLogResource\Pages;
 
-use App\Filament\Resources\AccessLogResource;
+use App\Filament\User\Resources\AccessLogResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 

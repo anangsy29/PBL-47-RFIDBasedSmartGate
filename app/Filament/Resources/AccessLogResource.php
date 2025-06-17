@@ -51,10 +51,16 @@ class AccessLogResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('rfidTag.tag_uid')->label('Tag UID')->sortable()->searchable(),
-                TextColumn::make('rfidTag.user.name')->label('User')->sortable()->searchable(),
+                TextColumn::make('rfidTag.user.name')->label('User Name')->sortable()->searchable(),
                 TextColumn::make('rfidTag.vehicle.plate_number')->label('Plate Number')->sortable()->searchable(),
                 TextColumn::make('accessed_at')->dateTime()->label('Data/Time')->sortable()->searchable(),
-                TextColumn::make('status')->sortable()->searchable(),
+                TextColumn::make('status')->sortable()->searchable()
+                    ->badge()
+                    ->color(fn(string $state): string => match ($state) {
+                        'Allowed' => 'success',
+                        'Denied' => 'danger',
+                        default => 'gray',
+                    }),
                 TextColumn::make('note')->limit(20)->sortable()->searchable(),
             ])
             ->poll('3s')
@@ -64,7 +70,7 @@ class AccessLogResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                // Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
