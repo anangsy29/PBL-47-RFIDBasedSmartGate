@@ -31,4 +31,9 @@ class RFIDtag extends Model
     {
         return $this->belongsTo(Vehicle::class, 'vehicles_id', 'vehicles_id');
     }
+
+    public function accessLogs()
+    {
+        return $this->hasMany(AccessLog::class, 'tags_id');
+    }
 }

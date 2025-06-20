@@ -27,4 +27,9 @@ class Vehicle extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'user_id');
     }
+
+    public function rfidTag()
+    {
+        return $this->hasOne(RfidTag::class, 'vehicle_id');
+    }
 }

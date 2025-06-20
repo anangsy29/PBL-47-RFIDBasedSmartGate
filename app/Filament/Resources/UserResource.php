@@ -5,9 +5,12 @@ namespace App\Filament\Resources;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
+use Filament\Pages\Page;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use Illuminate\Http\Request;
 use Filament\Resources\Resource;
+use Illuminate\Support\Facades\Hash;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,6 +28,10 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
+                TextInput::make('email')
+                    ->required()
+                    ->maxLength(255),
+                    
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -37,6 +44,15 @@ class UserResource extends Resource
                     ->label('Nomor HP')
                     ->required()
                     ->tel(),
+
+                TextInput::make('password')
+                    ->label('Password')
+                    ->password()
+                    ->revealable()
+                    ->default('123456')
+                    ->dehydrateStateUsing(fn($state) => Hash::make($state ?: '123456'))
+                    ->dehydrated()
+                    ->required(fn(Page $livewire) => $livewire instanceof Pages\CreateUser),
             ]);
     }
 
@@ -45,6 +61,7 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('user_id')->sortable()->label('ID'),
+                TextColumn::make('email')->sortable()->searchable(),
                 TextColumn::make('name')->sortable()->searchable(),
                 TextColumn::make('address')->sortable()->searchable(),
                 TextColumn::make('phone_number')->sortable()->label('Nomor HP'),
