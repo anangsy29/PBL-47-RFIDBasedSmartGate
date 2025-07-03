@@ -42,6 +42,7 @@ class UserPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/User/Pages'), for: 'App\\Filament\\User\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+                \App\Filament\User\Pages\EditProfile::class,
             ])
             ->discoverWidgets(in: app_path('Filament/User/Widgets'), for: 'App\\Filament\\User\\Widgets')
             ->widgets([
