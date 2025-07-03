@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
+// use App\Jobs\SendFCMNotificationJob;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\AccessLog;
@@ -41,42 +42,45 @@ class FCMController extends Controller
     {
         $request->validate([
             'user_id' => 'required|exists:users,user_id',
-            'rfid_tag' => 'required|string',
+            'tag_uid' => 'required|string', // ✅ gunakan tag_uid, bukan rfid_tag
         ]);
 
-        $user = User::find($request->user_id);
+        $user = User::where('user_id', $request->user_id)->first();
 
         if (!$user || !$user->fcm_token) {
             return response()->json(['success' => false, 'message' => 'User or FCM token not found.'], 404);
         }
 
         $fcmToken = $user->fcm_token;
+        $projectId = 'appsmrtgt'; // ✅ Ganti dengan project Firebase kamu
         $serviceAccountPath = storage_path('app/firebase/appsmrtgt-firebase-adminsdk-fbsvc-be0d19cf73.json');
 
+        // 🔐 Ambil akses token FCM
         $client = new \Google_Client();
         $client->setAuthConfig($serviceAccountPath);
         $client->addScope('https://www.googleapis.com/auth/firebase.messaging');
         $client->fetchAccessTokenWithAssertion();
-        $accessToken = $client->getAccessToken()['access_token'];
 
-        $projectId = 'appsmrtgt'; // Ganti dengan project ID kamu
+        $accessToken = $client->getAccessToken()['access_token'] ?? null;
 
+        if (!$accessToken) {
+            return response()->json(['success' => false, 'message' => 'Gagal ambil akses token FCM.']);
+        }
+
+        // 📩 Data yang dikirim ke aplikasi mobile
         $message = [
             'message' => [
                 'token' => $fcmToken,
                 'data' => [
                     'type' => 'verification',
                     'user_id' => (string) $request->user_id,
-                    'rfid_tag' => $request->rfid_tag,
+                    'tag_uid' => $request->tag_uid, // ✅ konsisten pakai tag_uid
                 ]
             ]
         ];
 
-        $response = Http::withToken($accessToken)
-            ->withHeaders(['Content-Type' => 'application/json'])
-            ->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $message);
-
-        $tag = RFIDTag::where('tag_uid', $request->rfid_tag)->first();
+        // 🔄 Simpan ke log access (status pending)
+        $tag = RFIDTag::where('tag_uid', $request->tag_uid)->first();
 
         if ($tag) {
             AccessLog::create([
@@ -86,11 +90,61 @@ class FCMController extends Controller
                 'note' => 'Menunggu verifikasi dari user.',
             ]);
         }
-        
+
+        // 📨 Kirim notifikasi ke FCM
+        $response = Http::withToken($accessToken)
+            ->withHeaders(['Content-Type' => 'application/json'])
+            ->post("https://fcm.googleapis.com/v1/projects/{$projectId}/messages:send", $message);
+
         return response()->json([
             'success' => $response->successful(),
             'status' => $response->status(),
             'body' => $response->body(),
+        ]);
+    }
+
+    public function handleVerificationResponse(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,user_id',
+            'tag_uid' => 'required|string',  // ✅ konsisten pakai tag_uid
+            'response' => 'required|in:yes,no',
+        ]);
+
+        $tag = RFIDtag::where('tag_uid', $request->tag_uid)->first();
+
+        if (!$tag) {
+            return response()->json(['success' => false, 'message' => 'Tag not found.'], 404);
+        }
+
+        // Update Access Log terbaru yang masih Pending
+        $accessLog = AccessLog::where('tags_id', $tag->tags_id)
+            ->where('status', 'Pending')
+            ->latest('accessed_at')
+            ->first();
+
+        if ($accessLog) {
+            $accessLog->status = $request->response === 'yes' ? 'Approved' : 'Denied';
+            $accessLog->note = 'Verifikasi user: ' . strtoupper($request->response);
+            $accessLog->save();
+        }
+
+        // Kirim sinyal ke Python listener jika disetujui
+        if ($request->response === 'yes') {
+            try {
+                Http::post('http://192.168.1.200:8000/open-gate', [  // ✅ gunakan localhost jika Python di local
+                    'tag_uid' => $request->tag_uid,
+                    'user_id' => $request->user_id,
+                    'action' => 'open',
+                ]);
+            } catch (\Exception $e) {
+                // log atau abaikan jika Python server belum siap
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Response has been recorded.',
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccessLogController;
+use App\Http\Controllers\Api\ValidateController;
 
 // login
 use App\Models\User;
@@ -38,6 +39,16 @@ Route::post('/change-password', [FCMController::class, 'updatePassword']);
 // log
 Route::get('/access-logs/{userId}', [FCMController::class, 'getAccessLogs']);
 
+// Validate
+Route::get('/validate-tag', [ValidateController::class, 'validateTag']);
+Route::fallback(function () {
+    return response()->json(['message' => 'API route not found.'], 404);
+});
+
+Route::post('/verify-response', [FCMController::class, 'handleVerificationResponse']);
+
+// Store-output
+Route::post('/store-output', [AccessLogController::class, 'storeOutput']);
 
 // FCM gate
 // Route::post('/open-gate', [FCMController::class, 'openGate']);
