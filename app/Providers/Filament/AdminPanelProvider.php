@@ -28,7 +28,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->registration()
+            // ->registration()
             ->authGuard('officer') // Tambahkan ini agar Filament pakai guard 'officer'
             ->colors([
                 'primary' => Color::Amber,

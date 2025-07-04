@@ -30,8 +30,10 @@ class UserResource extends Resource
             ->schema([
                 TextInput::make('email')
                     ->required()
-                    ->maxLength(255),
-                    
+                    ->maxLength(255)
+                    ->disabledOn('edit')
+                    ->dehydrated(fn(Page $livewire) => $livewire instanceof Pages\CreateUser),
+
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -47,12 +49,19 @@ class UserResource extends Resource
 
                 TextInput::make('password')
                     ->label('Password')
-                    ->password()
                     ->revealable()
-                    ->default('123456')
-                    ->dehydrateStateUsing(fn($state) => Hash::make($state ?: '123456'))
-                    ->dehydrated()
-                    ->required(fn(Page $livewire) => $livewire instanceof Pages\CreateUser),
+                    ->password()
+                    ->dehydrateStateUsing(fn($state) => filled($state) ? Hash::make($state) : null)
+                    ->required(fn(Page $livewire) => $livewire instanceof Pages\CreateUser)
+                    ->hiddenOn('edit'),
+
+                TextInput::make('password_confirmation')
+                    ->label('Confirm Password')
+                    ->revealable()
+                    ->password()
+                    ->required(fn(Page $livewire) => $livewire instanceof Pages\CreateUser)
+                    ->same('password')
+                    ->hiddenOn('edit'),
             ]);
     }
 

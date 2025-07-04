@@ -9,4 +9,9 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateRfidTag extends CreateRecord
 {
     protected static string $resource = RfidTagResource::class;
+
+    protected function getRedirectUrl(): string
+    {
+        return RfidTagResource::getUrl('index');
+    }
 }
