@@ -9,6 +9,8 @@ use Filament\PanelProvider;
 use Filament\Facades\Filament;
 use App\Filament\Auth\Register;
 use Filament\Support\Colors\Color;
+use App\Filament\Widgets\WelcomeWidget;
+use App\Filament\User\Widgets\AccessLogChart;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -46,8 +48,10 @@ class UserPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/User/Widgets'), for: 'App\\Filament\\User\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                WelcomeWidget::class,
+                AccessLogChart::class,
+                // Widgets\AccountWidget::class,
+                // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

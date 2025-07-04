@@ -12,6 +12,7 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use App\Filament\Widgets\WelcomeWidget;
 use App\Filament\Widgets\DashboardWidget;
+use App\Filament\Widgets\AccessLogChart;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -47,6 +48,8 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 WelcomeWidget::class,
                 DashboardWidget::class,
+                AccessLogChart::class,
+
             ])
             ->middleware([
                 EncryptCookies::class,
