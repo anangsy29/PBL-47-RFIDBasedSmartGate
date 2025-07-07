@@ -40,7 +40,8 @@ Route::post('/change-password', [FCMController::class, 'updatePassword']);
 Route::get('/access-logs/{userId}', [FCMController::class, 'getAccessLogs']);
 
 // Validate
-Route::get('/validate-tag', [ValidateController::class, 'validateTag']);
+// Route::post('/validate-tag', [ValidateController::class, 'validateTag']);
+Route::post('/validate-tag', [ValidateController::class, 'validateTag']);
 Route::fallback(function () {
     return response()->json(['message' => 'API route not found.'], 404);
 });

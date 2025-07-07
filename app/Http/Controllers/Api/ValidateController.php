@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Request;
 use App\Models\RFIDtag;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Api\FCMController;
 
 class ValidateController extends Controller
 {
     public function validateTag(Request $request)
     {
-        $tagUid = $request->input('tag_uid');
+        $tagUid = strtoupper(trim($request->input('tag_uid')));
+
+        Log::info("📥 Tag UID diterima: " . $tagUid);
 
         if (!$tagUid) {
             return response()->json([
@@ -20,25 +24,32 @@ class ValidateController extends Controller
             ], 400);
         }
 
-        // Cari tag di tabel rfid_tags berdasarkan tag_uid
+        // Cari tag dengan case-insensitive match dan pastikan aktif
         $rfidTag = RFIDtag::with(['user', 'vehicle'])
-            ->where('tag_uid', $tagUid)
-            ->where('status', 'active') // opsional, jika kamu hanya ingin valid tag yang aktif
+            ->whereRaw('UPPER(tag_uid) = ?', [$tagUid])
+            ->where('status', 'active') // pastikan kolom status-nya sesuai
             ->first();
 
         if ($rfidTag) {
-            $response = app(FCMController::class)->sendVerificationNotification(
-                new Request([
-                    'user_id' => $rfidTag->user_id,
-                    'tag_uid' => $rfidTag->tag_uid,
-                ])
-            );
+            Log::info("✅ Tag ditemukan: " . $rfidTag->tag_uid);
 
-            // Logging hasilnya
-            \Log::info("📨 Notifikasi response: ", [
-                'status' => $response->getStatusCode(),
-                'body' => $response->getContent()
-            ]);
+            try {
+                $response = app(FCMController::class)->sendVerificationNotification(
+                    new Request([
+                        'user_id' => $rfidTag->user_id,
+                        'tag_uid' => $rfidTag->tag_uid,
+                    ])
+                );
+
+                Log::info("📨 Notifikasi response: ", [
+                    'status' => $response->getStatusCode(),
+                    'body' => $response->getContent()
+                ]);
+            } catch (\Throwable $e) {
+                Log::error("❌ Gagal mengirim notifikasi FCM", [
+                    'error' => $e->getMessage()
+                ]);
+            }
 
             return response()->json([
                 'status' => 'success',
@@ -57,6 +68,8 @@ class ValidateController extends Controller
                 ]
             ], 200);
         } else {
+            \Log::warning("❌ Tag tidak ditemukan atau tidak aktif: " . $tagUid);
+
             return response()->json([
                 'status' => 'invalid',
                 'message' => 'Tag not found or inactive'

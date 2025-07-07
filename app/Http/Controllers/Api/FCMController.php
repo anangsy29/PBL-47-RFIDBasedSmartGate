@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 // use App\Jobs\SendFCMNotificationJob;
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -74,7 +75,21 @@ class FCMController extends Controller
                 'data' => [
                     'type' => 'verification',
                     'user_id' => (string) $request->user_id,
-                    'tag_uid' => $request->tag_uid, // ✅ konsisten pakai tag_uid
+                    'tag_uid' => $request->tag_uid,
+                ],
+                'android' => [
+                    'priority' => 'high',
+                ],
+                'apns' => [
+                    'headers' => [
+                        'apns-priority' => '10',
+                    ],
+                    'payload' => [
+                        'aps' => [
+                            'content-available' => 1,
+                        ],
+                    ],
+
                 ]
             ]
         ];
@@ -132,13 +147,19 @@ class FCMController extends Controller
         // Kirim sinyal ke Python listener jika disetujui
         if ($request->response === 'yes') {
             try {
-                Http::post('http://192.168.1.200:8000/open-gate', [  // ✅ gunakan localhost jika Python di local
+                $res = Http::post('https://ec3a-103-164-80-99.ngrok-free.app/open-gate', [
                     'tag_uid' => $request->tag_uid,
                     'user_id' => $request->user_id,
-                    'action' => 'open',
+                    'action' => 'OPEN',
                 ]);
+                \Log::info("🚀 Sukses kirim ke Python /open-gate", [
+                    'status' => $res->status(),
+                    'body' => $res->body()
+                ]);
+
+                \Log::info("📤 Respons Python:", ['status' => $res->status(), 'body' => $res->body()]);
             } catch (\Exception $e) {
-                // log atau abaikan jika Python server belum siap
+                \Log::error("❌ Gagal kirim ke Python /open-gate: " . $e->getMessage());
             }
         }
 
