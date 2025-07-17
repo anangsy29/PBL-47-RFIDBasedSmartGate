@@ -69,6 +69,7 @@ class VehicleResource extends Resource
             TextColumn::make('brand')->sortable()->searchable(),
             TextColumn::make('color')->sortable()->searchable(),
         ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

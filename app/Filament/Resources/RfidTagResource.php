@@ -82,13 +82,14 @@ class RfidTagResource extends Resource
                 Tables\Columns\TextColumn::make('vehicle.plate_number')->label('Plate Number')->sortable()->searchable(),
                 TextColumn::make('tag_uid')->label('Tag UID')->sortable()->searchable(),
                 TextColumn::make('status')
-                    ->badge() 
+                    ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Active' => 'success',
                         'Inactive' => 'danger',
                         default => 'gray',
                     })->sortable()->searchable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

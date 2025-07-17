@@ -30,7 +30,7 @@ class UserPanelProvider extends PanelProvider
             ->id('user')
             ->path('user')
             ->login(\App\Filament\Auth\Login::class)
-            ->registration(Register::class)
+            // ->registration(Register::class)
             ->authGuard('web')
             ->brandName('Smart Gate')
             ->favicon(asset('img/logo1.png'))

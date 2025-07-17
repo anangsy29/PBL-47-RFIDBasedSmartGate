@@ -75,6 +75,7 @@ class UserResource extends Resource
                 TextColumn::make('address')->sortable()->searchable(),
                 TextColumn::make('phone_number')->sortable()->label('Nomor HP'),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])
